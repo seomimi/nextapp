@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import styled from 'styled-components';
+import userPool from '../src/userPool';
 
 const SignupFormContainer = styled.div`
     h1 {
@@ -50,13 +51,14 @@ const ErrorMessage = styled.div`
 `;
 
 type Props = {
-    goLogin: () => void;
+    goLogin: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 };
 
 export default function SignupForm({ goLogin }: Props) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [passwordError, setPasswordError] = useState(false);
+    const gologinBtn = useRef<HTMLButtonElement>(null);
     const onChangeEmail = useCallback((e) => {
         e.preventDefault();
         setEmail(e.target.value);
@@ -69,13 +71,18 @@ export default function SignupForm({ goLogin }: Props) {
     };
     const onChangePassword = useCallback((e) => {
         setPassword(e.target.value);
-        console.log(CheckPass(e.target.value));
         setPasswordError(!CheckPass(e.target.value));
     }, []);
     const onSubmit = useCallback(
         (e) => {
             e.preventDefault();
-            console.log(email, password);
+            userPool.signUp(email, password, [], [], (err, data) => {
+                if (err) {
+                    return console.error(err);
+                }
+                alert('가입완료! 이메일 인증 후 로그인 하세요.');
+                gologinBtn.current?.click();
+            });
         },
         [email, password]
     );
@@ -92,7 +99,9 @@ export default function SignupForm({ goLogin }: Props) {
                 </div>
                 {passwordError && <ErrorMessage>8 or more characters, must include numbers and letters</ErrorMessage>}
                 <button type="submit">회원가입</button>
-                <button onClick={goLogin}>로그인하러 가기</button>
+                <button ref={gologinBtn} onClick={goLogin}>
+                    로그인하러 가기
+                </button>
             </form>
         </SignupFormContainer>
     );
