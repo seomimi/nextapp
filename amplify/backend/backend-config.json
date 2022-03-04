@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "nextappaws4a4637af": {
+      "service": "Cognito",
+      "serviceType": "imported",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}

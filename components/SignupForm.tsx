@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import styled from 'styled-components';
+import { Auth } from 'aws-amplify';
 
 const SignupFormContainer = styled.div`
     h1 {
@@ -57,6 +58,7 @@ export default function SignupForm({ goLogin }: Props) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [passwordError, setPasswordError] = useState(false);
+    const gologinBtn = useRef<HTMLButtonElement>(null);
     const onChangeEmail = useCallback((e) => {
         e.preventDefault();
         setEmail(e.target.value);
@@ -75,7 +77,18 @@ export default function SignupForm({ goLogin }: Props) {
     const onSubmit = useCallback(
         (e) => {
             e.preventDefault();
-            console.log(email, password);
+            Auth.signUp({ username: email, password, attributes: { email } })
+                .then((response) => {
+                    console.log(response);
+                    alert('가입완료! 이메일 인증 후 로그인 하세요.');
+                    gologinBtn.current?.click();
+                })
+                .catch((error) => {
+                    console.log(error);
+                    if (error.code === 'UsernameExistsException') {
+                        alert('이미 가입 된 이메일입니다.');
+                    }
+                });
         },
         [email, password]
     );
@@ -92,7 +105,9 @@ export default function SignupForm({ goLogin }: Props) {
                 </div>
                 {passwordError && <ErrorMessage>8 or more characters, must include numbers and letters</ErrorMessage>}
                 <button type="submit">회원가입</button>
-                <button onClick={goLogin}>로그인하러 가기</button>
+                <button ref={gologinBtn} onClick={goLogin}>
+                    로그인하러 가기
+                </button>
             </form>
         </SignupFormContainer>
     );
