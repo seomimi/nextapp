@@ -1,6 +1,8 @@
 import React, { Dispatch, SetStateAction, useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { Auth } from 'aws-amplify';
+import { userAction } from '../store/reducer/user';
 
 const LoginFormContainer = styled.div`
     h1 {
@@ -44,12 +46,13 @@ const LoginFormContainer = styled.div`
 
 type Props = {
     goSignup: () => void;
-    setUserId: Dispatch<SetStateAction<string | null>>;
 };
 
-export default function LoginForm({ goSignup, setUserId }: Props) {
+export default function LoginForm({ goSignup }: Props) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    const dispatch = useDispatch();
 
     const onChangeEmail = useCallback((e) => {
         setEmail(e.target.value);
@@ -62,7 +65,7 @@ export default function LoginForm({ goSignup, setUserId }: Props) {
             e.preventDefault();
             Auth.signIn(email, password)
                 .then((response) => {
-                    setUserId(response.attributes.email);
+                    dispatch(userAction.login(response.attributes.email));
                 })
                 .catch((error) => {
                     if (error.message == 'User is not confirmed.') {

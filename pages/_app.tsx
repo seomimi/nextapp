@@ -3,6 +3,8 @@ import { createGlobalStyle } from 'styled-components';
 import { normalize } from 'styled-normalize';
 import { Amplify } from 'aws-amplify';
 import awsmobile from '../src/aws-exports';
+import wrapper from '../store';
+import { Provider } from 'react-redux';
 
 Amplify.configure({ ...awsmobile, ssr: true });
 
@@ -15,11 +17,12 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 function MyApp({ Component, pageProps }: AppProps) {
+    const { store, props } = wrapper.useWrappedStore(pageProps);
     return (
-        <>
-            <Component {...pageProps} />
+        <Provider store={store}>
+            <Component {...props} />
             <GlobalStyle />
-        </>
+        </Provider>
     );
 }
 

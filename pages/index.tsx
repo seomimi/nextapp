@@ -4,6 +4,9 @@ import LoginForm from '../components/LoginForm';
 import styled from 'styled-components';
 import SignupForm from '../components/SignupForm';
 import { Auth, withSSRContext } from 'aws-amplify';
+import wrapper, { RootState } from '../store';
+import { userAction } from '../store/reducer/user';
+import { useSelector, useDispatch } from 'react-redux';
 
 const Container = styled.div`
     position: absolute;
@@ -42,31 +45,33 @@ type Props = {
     user: string;
 };
 
-const Index: NextPage<Props> = ({ user }) => {
+const Index: NextPage<Props> = ({}) => {
     const [signupCheck, setSignupCheck] = useState(true);
-    const [userId, setUserId] = useState<string | null>(user);
+    const { email: userId_in_store } = useSelector((state: RootState) => state.user);
+    const dispatch = useDispatch();
+
     const turnOver = useCallback(() => {
         setSignupCheck((prev) => !prev);
     }, []);
 
     const logOut = useCallback(() => {
         Auth.signOut()
-            .then(() => setUserId(null))
+            .then(() => dispatch(userAction.login(null)))
             .catch((error) => console.log(error));
     }, []);
 
     return (
         <Container>
-            {userId ? (
+            {userId_in_store ? (
                 <div className="context">
                     <h3>
-                        {userId},<br />
+                        {userId_in_store},<br />
                         로그인 완료
                     </h3>
                     <button onClick={logOut}>로그아웃</button>
                 </div>
             ) : (
-                <>{signupCheck ? <LoginForm goSignup={turnOver} setUserId={setUserId} /> : <SignupForm goLogin={turnOver} />}</>
+                <>{signupCheck ? <LoginForm goSignup={turnOver} /> : <SignupForm goLogin={turnOver} />}</>
             )}
         </Container>
     );
@@ -74,15 +79,16 @@ const Index: NextPage<Props> = ({ user }) => {
 
 export default Index;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps = wrapper.getServerSideProps((store) => async (context) => {
     const { Auth } = withSSRContext(context);
     const user = await Auth.currentUserInfo()
         .then((res: any) => {
+            store.dispatch(userAction.login(res.attributes.email || null));
             return res?.attributes.email || null;
         })
         .catch((error: Error) => {
             console.log(error);
             return null;
         });
-    return { props: { user } };
-};
+    return { props: {} };
+});
